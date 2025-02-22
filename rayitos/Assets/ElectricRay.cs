@@ -19,15 +19,21 @@ public class ElectricRay : MonoBehaviour
     public void SetOff()
     {
         gameObject.SetActive(false);
+        lineRenderer.enabled = false;
         isOn = false;
     }
     public void Init(Vector3 startPoint, Vector3 endPoint)
     {
-        isOn = true;
-        Draw(0);
         this.startPoint = startPoint;
-        this.endPoint = endPoint; 
+        this.endPoint = endPoint;
+        Draw(0);
         gameObject.SetActive(true);
+        Invoke("Delayed", 0.05f);
+    }
+    void Delayed()
+    {
+        lineRenderer.enabled = true;
+        isOn = true;
     }
 
     void Update()

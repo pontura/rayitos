@@ -1,10 +1,16 @@
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 using UnityEngine.SocialPlatforms.Impl;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
     [SerializeField] GameObject flash;
+
+    [SerializeField] GameObject hiscoreInGame;
+    [SerializeField] Image hiscoreBar;
+    [SerializeField] TMPro.TMP_Text hiscoreFieldInGame;
+
     [SerializeField] GameObject gameOver;
     [SerializeField] GameObject hiscoreGO;
     [SerializeField] TMPro.TMP_Text field;
@@ -18,6 +24,9 @@ public class UIManager : MonoBehaviour
         Reset();
         Restart();
         hiscore = PlayerPrefs.GetInt("hiscore");
+
+        if (hiscore > 0) SetHiscoreInGame();
+        else  hiscoreInGame.SetActive(false);
     }
     public void Shoot()
     {
@@ -42,6 +51,7 @@ public class UIManager : MonoBehaviour
     }
     public void Restart()
     {
+        hiscoreBar.fillAmount = 0;
         score = 0;
         field.text = "wait...";
         field.gameObject.SetActive(true);
@@ -49,11 +59,13 @@ public class UIManager : MonoBehaviour
         field.gameObject.SetActive(true);
         gameOver.SetActive(false);
         hiscoreGO.SetActive(false);
+        SetHiscoreInGame();
     }
     public void SetScore(int add)
     {
         score += add; 
         SetScore();
+        UpdateHiscoreInGame();
     }
     void SetScore()
     {
@@ -84,5 +96,19 @@ public class UIManager : MonoBehaviour
              hiscoreTitle.text = "HI-SCORE";
 
         hiscoreField.text = hiscore.ToString();
+    }
+    void SetHiscoreInGame()
+    {
+        if (hiscore == 0) return;
+        hiscoreInGame.SetActive(true);
+        hiscoreFieldInGame.text = hiscore.ToString();
+    }
+    void UpdateHiscoreInGame()
+    {
+        if (hiscore == 0) return;
+        if(score > hiscore)
+            hiscoreInGame.SetActive(false);
+        else
+            hiscoreBar.fillAmount = (float)score/ (float)hiscore;
     }
 }

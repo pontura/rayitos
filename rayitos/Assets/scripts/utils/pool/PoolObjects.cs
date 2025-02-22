@@ -41,11 +41,8 @@ namespace YaguarLib.Pool
         }
         GameObject GetObjectInDic(List<GameObject> allInDic)
         {
-            print(allInDic.Count);
             foreach (GameObject go in allInDic)
             {
-                print(go);
-                print(go.activeSelf);
                 if (!go.activeSelf)
                     return go;
             }

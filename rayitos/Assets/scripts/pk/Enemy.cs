@@ -11,7 +11,7 @@ public class Enemy : MonoBehaviour
         shooted,
         dead
     }
-
+    [SerializeField] bool isHeart;
     public void Init(float pos, int direction)
     {
         state = states.playing;
@@ -24,6 +24,7 @@ public class Enemy : MonoBehaviour
     }
     public void Move()
     {
+        if (isHeart) return;
         if (state != states.playing) return;
         float s = Time.deltaTime * direction * speed;
         Vector2 pos = transform.position;
