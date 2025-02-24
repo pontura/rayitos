@@ -14,18 +14,17 @@ public class GameManager : MonoBehaviour
     float timer;
     float timeTeSafeArea = 12;
 
-    [SerializeField] PoolObjects pool;
+    float initialEnemySpeed = 1.5f;
+    [SerializeField] float enemySpeed;
+    float maxEnemySpeed = 4;
+    float enemySpeedAcceleration = 3;
+
+    public  PoolObjects pool;
     [SerializeField] Explotion explotion;
-    Vector2 initialLimits = new Vector2(-10, 10);
-    Vector2 limits;
-    float wallIncrease = 1;
-    List<Enemy> enemies;
-    [SerializeField] Enemy heart_to_add;
-    [SerializeField] List<GameObject> walls;
+    EnemiesManager enemiesManager;
+
     [SerializeField] Transform container;
-    [SerializeField] Transform[] hearts_container;
     [SerializeField] UIManager ui;
-    RaysManager raysManager;
     states state;
 
     int life;
@@ -36,30 +35,24 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
-        raysManager = GetComponent<RaysManager>();
-        enemies = new List<Enemy>();
+        enemiesManager = GetComponent<EnemiesManager>();
+        enemiesManager.Init();
         Restart();
     }
     void Restart()
     {
+        enemySpeed = initialEnemySpeed;
         level = 1;
         timer = 0;
         life = 3;
         ui.Restart();
-        if (enemies.Count>0)
-        foreach (Enemy enemy in enemies)
-            Pool(enemy);
-        enemies.Clear();
-        AddHearts();
+        enemiesManager.Restart();
 
         CancelInvoke();
-        limits.x = initialLimits.x;
-        limits.y = initialLimits.y;
 
         state = states.playing;
         timerToAdd = maxTimerToAdd;
         Invoke("Loop", timerToAdd);
-        UpdateWalls();
     }
     void Loop()
     {
@@ -87,78 +80,34 @@ public class GameManager : MonoBehaviour
     void AddEnemy()
     {
         ui.Added();
-        GameObject obj = pool.Get("Enemy");
-        int dir = 1;
-        float pos;
-        if (Random.Range(0, 10) < 5)
-        {
-            dir = -1;
-            pos = limits.y;
-        }
-        else
-        {
-            dir = 1;
-            pos = limits.x;
-        }
-        Enemy enemy = obj.GetComponent<Enemy>();
-        enemy.Init(pos, dir);
-        enemies.Add(enemy); 
+        enemiesManager.AddEnemy(); 
     }
     private void Update()
     {
         timer += Time.deltaTime;
-        Enemy enemyWon = null;
-        foreach (Enemy enemy in enemies)
-        {
-            if(enemy != null && enemy.IsActived())
-            {
-                if (enemy.direction == -1 && enemy.transform.position.x < limits.x)
-                    enemyWon = enemy;
-                else if (enemy.direction == 1 && enemy.transform.position.x > limits.y)
-                    enemyWon = enemy;
-                else
-                    enemy.Move();
-            }
-        }
-        if (enemyWon != null)
-            Kill(enemyWon);
+
+        if(enemySpeed>maxEnemySpeed) enemySpeed = maxEnemySpeed;
+        else enemySpeed += (enemySpeedAcceleration/100) * Time.deltaTime;
+
+        enemiesManager.OnUpdate(enemySpeed);
     }
-    void Kill(Enemy e, bool hasWon = true)
+    public void Kill(Enemy e, bool hasWon = true)
     {
         ui.SetScore(1);
-        if(hasWon)
-            Win(e.direction == -1);
-
-        e.Die();
-        Pool(e);
-        print("Kill");
+        if (hasWon)
+            GameOver();
+        enemiesManager.Kill(e);
+        if (enemiesManager.Count() <= 0)
+            ui.Empty();
     }
     void OnDie(Enemy e)
     {
         Pool(e);
     }
-    void Pool(Enemy e)
+    public void Pool(Enemy e)
     {
         print("Pool " + e);
-        enemies.Remove(e);
         pool.Pool(e.gameObject);
-    }
-    void Win(bool left)
-    {
-        Scape();
-        return;
-        if (left)
-            limits.x += wallIncrease;
-        else
-            limits.y -= wallIncrease;
-        UpdateWalls();
-    }
-    void UpdateWalls()
-    {
-        walls[0].transform.position = new Vector2(limits.x,0);
-        walls[1].transform.position = new Vector2(limits.y, 0);
-        if (walls[0].transform.position.x >= walls[1].transform.position.x)
-            GameOver();
     }
     void GameOver()
     {
@@ -176,67 +125,31 @@ public class GameManager : MonoBehaviour
         ui.SetScoreScreen();
         Invoke("Restart", 4);
     }
-    void ShootWalls()
-    {
-        return;
-        limits.x += wallIncrease;
-        limits.y -= wallIncrease;
-        UpdateWalls();
-    }
+   
     Enemy enemyShooted;
     public void Shoot(int touchID)
     {
         ui.Shoot();
-        if (enemies.Count <=0)
-            ShootWalls();
+        int enemiesCount = enemiesManager.Count();
+        if (enemiesCount <= 0)
+            GameOver();
         else
         {
-            enemyShooted = GetEnemy();
-            enemyShooted.Shooted();
-            Vector2 pos = enemyShooted.transform.position;
-            raysManager.Init(pos, touchID);
-            AddExplotion(pos);
+            if (enemiesCount > 0)
+            {
+                enemyShooted = enemiesManager.GetEnemy();
+                enemyShooted.Shooted();
+                Vector2 pos = enemyShooted.transform.position;
+                AddExplotion(pos);
+            } else
+                GameOver();
         }
-    }
-    void Scape()
-    {
-        enemyShooted = LoseLife();
-        Kill(enemyShooted, false);
-    }
-    Enemy GetEnemy()
-    {
-        print(enemies.Count);
-        if (enemies.Count > life)
-            return enemies[life];
-        else
-            return LoseLife();
-    }
-    Enemy LoseLife()
-    {
-
-        life--;
-        if (life <= 0)
-            GameOver();
-        return enemies[0];
     }
     public void EndShot(int touchID)
     {
-        raysManager.SetOff(touchID);
         if (enemyShooted == null) return;
         Kill(enemyShooted, false);
         enemyShooted = null;
-    }
-    public void AddHearts()
-    {
-        for (int a = 0; a < life; a++) 
-        {
-            AddHeart(a);    
-        }
-    }
-    public void AddHeart(int id)
-    {
-        Enemy e = Instantiate(heart_to_add, hearts_container[id]);
-        enemies.Add(e);
     }
     void AddExplotion(Vector2 pos)
     {

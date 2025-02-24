@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 using UnityEngine.SocialPlatforms.Impl;
@@ -7,12 +8,15 @@ public class UIManager : MonoBehaviour
 {
     [SerializeField] GameObject flash;
 
+    [SerializeField] GameObject game;
     [SerializeField] GameObject hiscoreInGame;
     [SerializeField] Image hiscoreBar;
     [SerializeField] TMPro.TMP_Text hiscoreFieldInGame;
 
     [SerializeField] GameObject gameOver;
     [SerializeField] GameObject hiscoreGO;
+
+    [SerializeField] ShotButton shotButton;
     [SerializeField] TMPro.TMP_Text field;
     [SerializeField] TMPro.TMP_Text hiscoreTitle;
     [SerializeField] TMPro.TMP_Text hiscoreField;
@@ -43,23 +47,30 @@ public class UIManager : MonoBehaviour
     {
         field.gameObject.SetActive(false);
         gameOver.SetActive(true);
-    }
-    public void Added()
-    {
-        if (score == 0)
-            field.text = "now!";
-    }
+    }   
     public void Restart()
     {
+        Empty();
         hiscoreBar.fillAmount = 0;
         score = 0;
-        field.text = "wait...";
         field.gameObject.SetActive(true);
         gameOver.SetActive(false);
         field.gameObject.SetActive(true);
         gameOver.SetActive(false);
         hiscoreGO.SetActive(false);
         SetHiscoreInGame();
+    }
+    bool isEmpty;
+    public void Added()
+    {
+        if (!isEmpty) return;
+        isEmpty = false;
+        shotButton.Active();
+    }
+    public void Empty()
+    {
+        isEmpty = true;
+        shotButton.Empty();
     }
     public void SetScore(int add)
     {

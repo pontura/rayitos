@@ -1,22 +1,24 @@
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class Enemy : MonoBehaviour
 {
-    float speed = 10;
-    public int direction;
+    float speed;
     states state;
+    Vector2 pos;
     enum states
     {
         playing,
         shooted,
         dead
     }
-    [SerializeField] bool isHeart;
-    public void Init(float pos, int direction)
+    public void Init(float pos_x, float pos_y, float speed)
     {
+        this.speed = speed;
+        this.speed += Random.Range(0f, 1.5f);
+        pos = new Vector2(pos_x, pos_y);
         state = states.playing;
-        this.direction = direction;
-        transform.position = new Vector2(pos, Random.Range(-4,4));
+        transform.position = pos;
     }
     public bool IsActived()
     {
@@ -24,11 +26,9 @@ public class Enemy : MonoBehaviour
     }
     public void Move()
     {
-        if (isHeart) return;
         if (state != states.playing) return;
-        float s = Time.deltaTime * direction * speed;
         Vector2 pos = transform.position;
-        pos.x += s;
+        pos.y -= Time.deltaTime * speed;
         transform.position = pos;
     }
     public void Shooted()
