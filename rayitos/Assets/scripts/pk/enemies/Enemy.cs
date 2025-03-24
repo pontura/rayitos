@@ -4,19 +4,26 @@ using static UnityEditor.PlayerSettings;
 public class Enemy : MonoBehaviour
 {
     float speed;
-    states state;
-    Vector2 pos;
-    enum states
+    public states state;
+    public types type;
+    Vector3 pos;
+
+    public enum states
     {
         playing,
         shooted,
         dead
     }
-    public void Init(float pos_x, float pos_y, float speed)
+    public enum types
+    {
+        simple,
+        bomb
+    }
+    public void Init(float pos_x, float pos_z, float speed)
     {
         this.speed = speed;
         this.speed += Random.Range(0f, 1.5f);
-        pos = new Vector2(pos_x, pos_y);
+        pos = new Vector3(pos_x, 0, pos_z);
         state = states.playing;
         transform.position = pos;
     }
@@ -27,11 +34,11 @@ public class Enemy : MonoBehaviour
     public void Move()
     {
         if (state != states.playing) return;
-        Vector2 pos = transform.position;
-        pos.y -= Time.deltaTime * speed;
+        Vector3 pos = transform.position;
+        pos.z -= Time.deltaTime * speed;
         transform.position = pos;
     }
-    public void Shooted()
+    public virtual void Shooted()
     {
         state = states.shooted;
     }

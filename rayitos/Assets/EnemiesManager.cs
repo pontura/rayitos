@@ -7,8 +7,9 @@ public class EnemiesManager : MonoBehaviour
     GameManager gameManager;
     Vector2 initialLimits = new Vector2(-2, 2);
     Vector2 limits;
-    float init_y = 4.5f;
+    float init_z = 6f;
     float enemySpeed;
+    [SerializeField] bool bombOnScreen;
 
     public void Init()
     {
@@ -20,15 +21,25 @@ public class EnemiesManager : MonoBehaviour
     public int Count() { return enemies.Count; }
     public void Restart()
     {
+        bombOnScreen = false;
         foreach (Enemy enemy in enemies)
             Pool(enemy);
         enemies.Clear();
     }
     public void AddEnemy()
     {
-        GameObject obj = gameManager.pool.Get("Enemy");
+        GameObject obj;
+
+        if (bombOnScreen || Random.Range(0, 10)<7)     
+            obj = gameManager.pool.Get("Enemy_Simple"); 
+        else
+        {
+            bombOnScreen = true;
+            obj = gameManager.pool.Get("Enemy_Bomb");
+        }
+
         Enemy enemy = obj.GetComponent<Enemy>();
-        enemy.Init(Random.Range(limits.x, limits.y), init_y, enemySpeed);
+        enemy.Init(Random.Range(limits.x, limits.y), init_z, enemySpeed);
         enemies.Add(enemy);
     }
     public void OnUpdate(float enemySpeed)
@@ -39,7 +50,7 @@ public class EnemiesManager : MonoBehaviour
         {
             if (enemy != null && enemy.IsActived())
             {
-                if (enemy.transform.position.y <= -init_y)
+                if (enemy.transform.position.z <= -init_z)
                     enemyWon = enemy;
                 else
                     enemy.Move();
@@ -52,8 +63,20 @@ public class EnemiesManager : MonoBehaviour
     {
         return enemies[0];
     }
+    public void BombActivated()
+    {
+        int i = enemies.Count;
+        while(i>0)
+        {
+            Enemy enemy = enemies[i-1];
+            i--;
+            gameManager.Kill(enemy, false);
+        }
+    }
     public void Kill(Enemy enemy)
     {
+        if(enemy.type == Enemy.types.bomb)
+            bombOnScreen = false;
         Pool(enemy);
     }
     void Pool(Enemy enemy)

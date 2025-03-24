@@ -21,7 +21,8 @@ public class GameManager : MonoBehaviour
 
     public  PoolObjects pool;
     [SerializeField] Explotion explotion;
-    EnemiesManager enemiesManager;
+    EnemiesManager enemiesManager; 
+    RaysManager raysManager;
 
     [SerializeField] Transform container;
     [SerializeField] UIManager ui;
@@ -35,12 +36,15 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
+        raysManager = GetComponent<RaysManager>();
+        raysManager.SetOff(0);
         enemiesManager = GetComponent<EnemiesManager>();
         enemiesManager.Init();
         Restart();
     }
     void Restart()
     {
+        ui.Init();
         enemySpeed = initialEnemySpeed;
         level = 1;
         timer = 0;
@@ -136,22 +140,34 @@ public class GameManager : MonoBehaviour
         else
         {
             if (enemiesCount > 0)
-            {
+            {               
                 enemyShooted = enemiesManager.GetEnemy();
+
+                if (enemyShooted.type == Enemy.types.bomb)
+                    BombExplotion(enemyShooted);
+
                 enemyShooted.Shooted();
-                Vector2 pos = enemyShooted.transform.position;
+                Vector3 pos = enemyShooted.transform.position;
                 AddExplotion(pos);
+
+                raysManager.Init(enemyShooted.transform.position, 0);
             } else
                 GameOver();
         }
     }
     public void EndShot(int touchID)
     {
+        ShotDone(touchID);
+        ui.EndShotSequence(); 
+        raysManager.SetOff(0);
+    }
+    public void ShotDone(int touchID)
+    {
         if (enemyShooted == null) return;
         Kill(enemyShooted, false);
         enemyShooted = null;
     }
-    void AddExplotion(Vector2 pos)
+    void AddExplotion(Vector3 pos)
     {
         GameObject go = pool.Get("explotion");
         go.GetComponent<Explotion>().Init(pos, ExplotionDone);
@@ -159,5 +175,9 @@ public class GameManager : MonoBehaviour
     void ExplotionDone(Explotion explotion)
     {
         pool.Pool(explotion.gameObject);
+    }
+    void BombExplotion(Enemy enmemy)
+    {
+        enemiesManager.BombActivated();
     }
 }

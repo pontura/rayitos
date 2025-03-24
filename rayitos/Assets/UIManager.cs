@@ -20,20 +20,30 @@ public class UIManager : MonoBehaviour
     [SerializeField] TMPro.TMP_Text field;
     [SerializeField] TMPro.TMP_Text hiscoreTitle;
     [SerializeField] TMPro.TMP_Text hiscoreField;
+    CombosManager combosManager;
+
     int hiscore;
     int score;
 
-    private void Start()
+    public void Init()
     {
+        combosManager = GetComponent<CombosManager>();
         Reset();
         Restart();
         hiscore = PlayerPrefs.GetInt("hiscore");
 
         if (hiscore > 0) SetHiscoreInGame();
         else  hiscoreInGame.SetActive(false);
+
+        combosManager.Init();
+    }
+    public void EndShotSequence()
+    {
+        combosManager.EndShotSequence();
     }
     public void Shoot()
     {
+        combosManager.Add();
         CancelInvoke();
         flash.SetActive(true);
         Invoke("Reset", 0.15f);
@@ -58,7 +68,8 @@ public class UIManager : MonoBehaviour
         field.gameObject.SetActive(true);
         gameOver.SetActive(false);
         hiscoreGO.SetActive(false);
-        SetHiscoreInGame();
+        SetHiscoreInGame(); 
+        SetScore();
     }
     bool isEmpty;
     public void Added()

@@ -124,14 +124,14 @@ public class InputManager : MonoBehaviour
                 delayToShoot -= shootDecrease;
                 if (delayToShoot < minDelayToShoot)
                     delayToShoot = minDelayToShoot;
-                gameManager.EndShot(touchID);
+                gameManager.ShotDone(touchID);
                 Shoot(touchID);
             }
         }
         else if (state != states.idle && timer > delayToShoot)
         {
             state = states.idle;
-            gameManager.EndShot(touchID);
+            gameManager.ShotDone(touchID);
         }
 #endif
 
