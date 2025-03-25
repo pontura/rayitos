@@ -14,9 +14,9 @@ public class GameManager : MonoBehaviour
     float timer;
     float timeTeSafeArea = 12;
 
-    float initialEnemySpeed = 1.5f;
+    float initialEnemySpeed = 0.5f;
     [SerializeField] float enemySpeed;
-    float maxEnemySpeed = 4;
+    float maxEnemySpeed = 2;
     float enemySpeedAcceleration = 3;
 
     public  PoolObjects pool;
@@ -115,6 +115,7 @@ public class GameManager : MonoBehaviour
     }
     void GameOver()
     {
+        print("gameover");
         CancelInvoke();
         state = states.done;
         Invoke("GameOverScreen", 0.5f);
@@ -131,7 +132,7 @@ public class GameManager : MonoBehaviour
     }
    
     Enemy enemyShooted;
-    public void Shoot(int touchID)
+    public void Shoot(float y_axis)
     {
         ui.Shoot();
         int enemiesCount = enemiesManager.Count();
@@ -139,12 +140,11 @@ public class GameManager : MonoBehaviour
             GameOver();
         else
         {
-            if (enemiesCount > 0)
-            {               
-                enemyShooted = enemiesManager.GetEnemy();
-
-                if (enemyShooted.type == Enemy.types.bomb)
-                    BombExplotion(enemyShooted);
+            enemyShooted = enemiesManager.GetEnemy(y_axis);
+            if (enemyShooted != null)
+            {  
+                //if (enemyShooted.type == Enemy.types.bomb)
+                //    BombExplotion(enemyShooted);
 
                 enemyShooted.Shooted();
                 Vector3 pos = enemyShooted.transform.position;
@@ -155,13 +155,13 @@ public class GameManager : MonoBehaviour
                 GameOver();
         }
     }
-    public void EndShot(int touchID)
+    public void EndShot()
     {
-        ShotDone(touchID);
+        ShotDone();
         ui.EndShotSequence(); 
         raysManager.SetOff(0);
     }
-    public void ShotDone(int touchID)
+    public void ShotDone()
     {
         if (enemyShooted == null) return;
         Kill(enemyShooted, false);

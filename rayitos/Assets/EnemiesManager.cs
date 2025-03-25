@@ -39,7 +39,10 @@ public class EnemiesManager : MonoBehaviour
         }
 
         Enemy enemy = obj.GetComponent<Enemy>();
-        enemy.Init(Random.Range(limits.x, limits.y), init_z, enemySpeed);
+
+        bool up = false;        if (Random.Range(0, 10) < 5) up = true;
+
+        enemy.Init(Random.Range(limits.x, limits.y), up, init_z, enemySpeed);
         enemies.Add(enemy);
     }
     public void OnUpdate(float enemySpeed)
@@ -50,7 +53,9 @@ public class EnemiesManager : MonoBehaviour
         {
             if (enemy != null && enemy.IsActived())
             {
-                if (enemy.transform.position.z <= -init_z)
+                if (enemy.up && enemy.transform.position.z <= 0)
+                    enemyWon = enemy;
+                else if (!enemy.up && enemy.transform.position.z >= 0)
                     enemyWon = enemy;
                 else
                     enemy.Move();
@@ -59,9 +64,16 @@ public class EnemiesManager : MonoBehaviour
         if (enemyWon != null)
             gameManager.Kill(enemyWon);
     }
-    public Enemy GetEnemy()
+    public Enemy GetEnemy(float y_axis)
     {
-        return enemies[0];
+        foreach (Enemy enemy in enemies)
+        {
+            if(y_axis>0 && enemy.transform.position.z>0)
+                return enemy;
+            else if (y_axis<0 && enemy.transform.position.z < 0)
+                return enemy;
+        }
+        return null;
     }
     public void BombActivated()
     {

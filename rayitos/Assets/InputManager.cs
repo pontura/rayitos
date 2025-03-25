@@ -1,119 +1,67 @@
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
 
+
 public class InputManager : MonoBehaviour
 {
+    [SerializeField] Joystick joystick;
     float timer;
     float delayToShoot;
-    float initialDelayToShoot = 0.25f;
+    float initialDelayToShoot = 0.5f;
     float minDelayToShoot = 0.05f;
     float shootDecrease = 0.075f;
 
     states state1;
     states state2;
 
-    states state;
+    [SerializeField] states state;
     enum states
     {
+        off,
         idle,
         pressed,
         released
     }
     GameManager gameManager;
+
+    float deadZone = 0.01f;
+
+    float y_axis;
     private void Start()
     {
-        gameManager = GetComponent<GameManager>();  
+        gameManager = GetComponent<GameManager>();
+        Invoke("Init", 1);
+
     }
-    int touchID = 0;
+
+    
+
+    public void Init()
+    {
+        state = states.idle;
+    }
     void Update()
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        if (Input.touchCount >0)
+        if (state == states.off) return;
+        float new_y_axis = joystick.Direction.y;
+        float new_abs_y_axis = Mathf.Abs(new_y_axis);
+
+        if (new_abs_y_axis > deadZone && y_axis == 0)
         {
-            if (Input.touches[0].phase == TouchPhase.Began)
-            {
-                timer = 0;
-                delayToShoot = initialDelayToShoot;
-                Shoot(0);
-                state1 = states.pressed;
-            }
-            else if (Input.touches[0].phase == TouchPhase.Ended)
-            {
-                state1 = states.idle;
-                gameManager.EndShot(0);
-            }
-            if (Input.touchCount > 1)
-            {
-                if (Input.touches[1].phase == TouchPhase.Began)
-                {
-                    timer = 0;
-                    delayToShoot = initialDelayToShoot;
-                    Shoot(1);
-                    state2 = states.pressed;
-                }
-                else if (Input.touches[1].phase == TouchPhase.Ended)
-                {
-                    state2 = states.idle;
-                    gameManager.EndShot(1);
-                }
-            }
-        }
-        timer += Time.deltaTime;
-        if (state1 == states.pressed)
-        {
-            if (timer > delayToShoot)
-            {
-                delayToShoot -= shootDecrease;
-                if (delayToShoot < minDelayToShoot)
-                    delayToShoot = minDelayToShoot;
-                gameManager.EndShot(0);
-                Shoot(0);
-            }
-        }
-        else if (state1 != states.idle && timer > delayToShoot)
-        {
-            state1 = states.idle;
-            gameManager.EndShot(0);
-        }
-
-
-
-        if (state2 == states.pressed)
-        {
-            if (timer > delayToShoot)
-            {
-                delayToShoot -= shootDecrease;
-                if (delayToShoot < minDelayToShoot)
-                    delayToShoot = minDelayToShoot;
-                gameManager.EndShot(1);
-                Shoot(1);
-            }
-        }
-        else if (state2 != states.idle && timer > delayToShoot)
-        {
-            state2 = states.idle;
-            gameManager.EndShot(1);
-        }
-
-
-
-
-
-#else
-
-        if (Input.GetMouseButtonDown(0))
-        {
+            print("press " + new_y_axis);
             timer = 0;
             delayToShoot = initialDelayToShoot;
-            Shoot(touchID);
-            state = states.pressed;
+            Shoot(new_y_axis);
+            state = states.pressed; 
         }
-        else if (Input.GetMouseButtonUp(0))
+        else if (new_abs_y_axis <= deadZone && Mathf.Abs(y_axis) > deadZone)
         {
+            print("release ");
             state = states.released;
             state = states.idle;
-            gameManager.EndShot(touchID);
+            gameManager.EndShot();
         }
+        y_axis = new_y_axis;
 
         if (state != states.idle)
             timer += Time.deltaTime;
@@ -121,25 +69,24 @@ public class InputManager : MonoBehaviour
         {
             if (timer > delayToShoot)
             {
-                delayToShoot -= shootDecrease;
+                delayToShoot -= new_abs_y_axis/100;
                 if (delayToShoot < minDelayToShoot)
                     delayToShoot = minDelayToShoot;
-                gameManager.ShotDone(touchID);
-                Shoot(touchID);
+                gameManager.ShotDone();
+                Shoot(y_axis);
             }
         }
         else if (state != states.idle && timer > delayToShoot)
         {
             state = states.idle;
-            gameManager.ShotDone(touchID);
+            gameManager.ShotDone();
         }
-#endif
 
     }
-    void Shoot(int touchID)
+    void Shoot(float y_axis)
     {
-        print("Shoot");
+        print("Shoot" + y_axis);
         timer = 0;
-        gameManager.Shoot(touchID);
+        gameManager.Shoot(y_axis);
     }
 }

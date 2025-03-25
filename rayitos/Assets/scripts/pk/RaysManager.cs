@@ -15,7 +15,7 @@ public class RaysManager : MonoBehaviour
     }
     Vector3 InitPos()
     {
-        return new Vector3(0, 0, -6);
+        return new Vector3(0, 0, 0);
     }
 
 
