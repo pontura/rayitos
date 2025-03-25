@@ -7,9 +7,10 @@ public class InputManager : MonoBehaviour
     [SerializeField] Joystick joystick;
     float timer;
     float delayToShoot;
-    float initialDelayToShoot = 0.5f;
-    float minDelayToShoot = 0.05f;
-    float shootDecrease = 0.075f;
+    float delayToEndShoot;
+
+    float accelerationShot = 10;
+    float minDelayToShoot = 0.5f;
 
     states state1;
     states state2;
@@ -24,7 +25,7 @@ public class InputManager : MonoBehaviour
     }
     GameManager gameManager;
 
-    float deadZone = 0.01f;
+    float deadZone = 0.1f;
 
     float y_axis;
     private void Start()
@@ -40,53 +41,51 @@ public class InputManager : MonoBehaviour
     {
         state = states.idle;
     }
+    void SetOff()
+    {
+        if (state == states.pressed) EndShoot();
+        state = states.off;
+    }
     void Update()
     {
+
         if (state == states.off) return;
+        if (!gameManager.IsPlaying()) { SetOff(); return; }
+
         float new_y_axis = joystick.Direction.y;
         float new_abs_y_axis = Mathf.Abs(new_y_axis);
 
-        if (new_abs_y_axis > deadZone && y_axis == 0)
-        {
-            print("press " + new_y_axis);
-            timer = 0;
-            delayToShoot = initialDelayToShoot;
-            Shoot(new_y_axis);
-            state = states.pressed; 
-        }
-        else if (new_abs_y_axis <= deadZone && Mathf.Abs(y_axis) > deadZone)
-        {
-            print("release ");
-            state = states.released;
-            state = states.idle;
-            gameManager.EndShot();
-        }
-        y_axis = new_y_axis;
+        if (state == states.idle && new_abs_y_axis > deadZone && Mathf.Abs(y_axis) < deadZone)
+            StartShooting(new_y_axis);
+        else if (state == states.pressed && new_abs_y_axis <= deadZone && Mathf.Abs(y_axis) > deadZone)
+            EndShoot();
 
-        if (state != states.idle)
-            timer += Time.deltaTime;
         if (state == states.pressed)
         {
+            delayToShoot = new_abs_y_axis;
+            timer += Time.deltaTime;
             if (timer > delayToShoot)
-            {
-                delayToShoot -= new_abs_y_axis/100;
-                if (delayToShoot < minDelayToShoot)
-                    delayToShoot = minDelayToShoot;
-                gameManager.ShotDone();
-                Shoot(y_axis);
-            }
+                ShotDone(new_y_axis);
         }
-        else if (state != states.idle && timer > delayToShoot)
-        {
-            state = states.idle;
-            gameManager.ShotDone();
-        }
-
+        y_axis = new_y_axis;
     }
-    void Shoot(float y_axis)
+    void StartShooting(float new_y_axis)
     {
-        print("Shoot" + y_axis);
+        print("StartShooting " + new_y_axis);
         timer = 0;
-        gameManager.Shoot(y_axis);
+        state = states.pressed; 
+        gameManager.InitShoot(new_y_axis);
+    }
+    void EndShoot()
+    {
+        print("EndShoot" + y_axis);
+        gameManager.EndShot();
+        state = states.idle;
+    }
+    void ShotDone(float new_y_axis)
+    {
+        print("ShotDone" + new_y_axis);
+        gameManager.ShotDone(); 
+        StartShooting(new_y_axis);
     }
 }

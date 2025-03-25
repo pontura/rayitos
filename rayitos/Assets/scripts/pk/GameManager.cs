@@ -3,6 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Diagnostics;
 using YaguarLib.Pool;
+using static UnityEditor.PlayerSettings;
 
 public class GameManager : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class GameManager : MonoBehaviour
 
     float initialEnemySpeed = 0.5f;
     [SerializeField] float enemySpeed;
-    float maxEnemySpeed = 2;
+    float maxEnemySpeed = 1;
     float enemySpeedAcceleration = 3;
 
     public  PoolObjects pool;
@@ -57,6 +58,11 @@ public class GameManager : MonoBehaviour
         state = states.playing;
         timerToAdd = maxTimerToAdd;
         Invoke("Loop", timerToAdd);
+        GetComponent<InputManager>().Init();
+    }
+    public bool IsPlaying()
+    {
+        return state == states.playing;
     }
     void Loop()
     {
@@ -110,7 +116,7 @@ public class GameManager : MonoBehaviour
     }
     public void Pool(Enemy e)
     {
-        print("Pool " + e);
+        //print("Pool " + e);
         pool.Pool(e.gameObject);
     }
     void GameOver()
@@ -132,7 +138,7 @@ public class GameManager : MonoBehaviour
     }
    
     Enemy enemyShooted;
-    public void Shoot(float y_axis)
+    public void InitShoot(float y_axis)
     {
         ui.Shoot();
         int enemiesCount = enemiesManager.Count();
@@ -143,13 +149,8 @@ public class GameManager : MonoBehaviour
             enemyShooted = enemiesManager.GetEnemy(y_axis);
             if (enemyShooted != null)
             {  
-                //if (enemyShooted.type == Enemy.types.bomb)
-                //    BombExplotion(enemyShooted);
-
                 enemyShooted.Shooted();
                 Vector3 pos = enemyShooted.transform.position;
-                AddExplotion(pos);
-
                 raysManager.Init(enemyShooted.transform.position, 0);
             } else
                 GameOver();
@@ -157,9 +158,17 @@ public class GameManager : MonoBehaviour
     }
     public void EndShot()
     {
-        ShotDone();
-        ui.EndShotSequence(); 
+        ui.EndShotSequence();
         raysManager.SetOff(0);
+
+        if (enemyShooted == null) return;
+
+        //if (enemyShooted.type == Enemy.types.bomb)
+        //    BombExplotion(enemyShooted);
+
+        Vector3 pos  = enemyShooted.transform.position;
+        AddExplotion(pos);
+        ShotDone();
     }
     public void ShotDone()
     {

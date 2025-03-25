@@ -50,18 +50,18 @@ namespace YaguarLib.Pool
         }
         public GameObject AddNeObject(string key)
         {
-            print("AddNeObject " + key);
+           // print("AddNeObject " + key);
             foreach (GameObject go in objectsToPool)
             {
                 if (key == go.name)
                 {
-                    print("key " + key);
+                   // print("key " + key);
                     foreach (KeyValuePair<string, List<GameObject>> d in all)
                     {
-                        print(d.Key);
+                        //print(d.Key);
                         if (d.Key == key)
                         {
-                            print("key " + key + " - " + d.Key);
+                           // print("key " + key + " - " + d.Key);
                             GameObject newGO = Instantiate(go, container);
                             newGO.name = key;
                             newGO.SetActive(false);
